@@ -1,0 +1,21 @@
+name: docker-api-probe
+on: [push]
+
+jobs:
+  v124:
+    name: v1.24 on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04]
+    steps:
+      - name: Ask the daemon for /v1.24/version
+        run: |
+          uname -a
+          code=$(curl -sS -o /dev/null -w '%{http_code}' \
+            --unix-socket /var/run/docker.sock http://localhost/v1.24/version) || code=curl-failed
+          echo "v1.24 status=$code"
+          body=$(curl -sS --unix-socket /var/run/docker.sock http://localhost/v1.24/version | head -c 300) || true
+          echo "body=$body"
+          [ "$code" = "200" ]
